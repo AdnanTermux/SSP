@@ -1,22 +1,16 @@
 FROM php:8.4-apache
 
-# Install system dependencies
+# Install build dependencies for PHP extensions
 RUN apt-get update && apt-get install -y \
     libzip-dev \
+    libxml2-dev \
     libcurl4-openssl-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install PHP extensions - CRITICAL: pdo_mysql must be installed
-RUN docker-php-ext-install \
-    pdo \
-    pdo_mysql \
-    curl \
-    mbstring \
-    xml \
-    zip
-
-# Enable Apache modules
-RUN a2enmod rewrite headers ssl
+    libonig-dev \
+    && docker-php-ext-install pdo pdo_mysql curl mbstring xml zip \
+    && a2enmod rewrite \
+    && a2enmod headers \
+    && a2enmod ssl \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /var/www/html
@@ -25,8 +19,7 @@ WORKDIR /var/www/html
 COPY . .
 
 # Set permissions
-RUN chown -R www-data:www-data /var/www/html && \
-    chmod -R 755 /var/www/html
+RUN chown -R www-data:www-data /var/www/html
 
 # Expose port
 EXPOSE 80
