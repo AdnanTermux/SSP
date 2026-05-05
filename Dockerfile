@@ -9,13 +9,11 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo pdo_mysql curl mbstring xml zip \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Enable only necessary Apache modules (avoid MPM conflicts)
-RUN a2enmod rewrite && \
-    a2enmod headers && \
-    a2enmod ssl
+# Remove Apache MPM modules to prevent conflicts
+RUN rm -f /etc/apache2/mods-enabled/mpm_*.load /etc/apache2/mods-enabled/mpm_*.conf
 
-# Disable conflicting MPM modules if they exist
-RUN a2dismod mpm_event mpm_worker 2>/dev/null || true
+# Ensure only mpm_prefork is enabled
+RUN a2enmod mpm_prefork rewrite headers
 
 # Set working directory
 WORKDIR /var/www/html
